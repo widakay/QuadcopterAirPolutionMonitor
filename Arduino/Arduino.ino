@@ -1,6 +1,7 @@
 
 #define BATTLEVEL
 #define DISPLAYEN
+#define BMP180
 //#define SDLog
 
 #define INTERVAL 1000
@@ -20,6 +21,12 @@
 #include "MAX1704.h"
 #endif
 
+#ifdef BMP180
+#include "I2Cdev.h"
+#include "BMP085.h"
+BMP085 barometer;
+#endif
+
 #ifdef DISPLAYEN
 Adafruit_PCD8544 display = Adafruit_PCD8544(6, 5, 9);
 #endif
@@ -29,14 +36,17 @@ MAX1704 fuelGauge;
 #endif
 TinyGPS gps;
 
-int dustPin=2;
+int dustPin=2; // analog input pin 2
 int ledPower=14;
+int LPGasPin = 2; // digital io pin 2
 
 int delayTime=280;
 int delayTime2=40;
 float offTime=9680;
 float sensorVal = 0;
 
+float soc[120];
+int socCount = 0;
 
 
 unsigned long lastDebug;
@@ -75,12 +85,17 @@ void setup(){
   fuelGauge.showConfig();
 #endif
 
+#ifdef BMP180
+  barometer.initialize();
+  Serial.println(barometer.testConnection() ? "BMP085 connection successful" : "BMP085 connection failed");
+#endif
+
 
   pinMode(ledPower,OUTPUT);
-  //pinMode(9,OUTPUT);
+  pinMode(LPGasPin,OUTPUT);
   digitalWrite(ledPower, LOW);
   //analogReference(DEFAULT);
-  //digitalWrite(9, LOW);
+  digitalWrite(LPGasPin, LOW);
 
   startMillis = millis();
 
@@ -93,31 +108,20 @@ void setup(){
 
 void loop() {
   manageGPS();
-  //readLPGas();
+  updateLPGas();
 
   if (millis()-lastDebug > INTERVAL) {
 
 #ifdef DISPLAYEN
     displayData();
 #endif
-
     lastDebug = millis();
+    #ifdef BMP180
+    logPressure();
+    #endif
     float sensorVal = sampleSensor100();
-    float ppm = sensorVal*0.172-0.0999;
+    float ppm = sensorVal*(3.3/1024)*0.172-0.0999;
     logLP();
-
-
-    
-    Serial.print("log: ");
-     
-     Serial.print(sensorVal);
-     Serial.print("V");
-     //analogWrite(9, sensorVal/4);
-     
-     
-     
-     Serial.print(" ppm: ");
-     Serial.println(ppm, 4);
 
 
     logger.print("#PPM:");
@@ -151,16 +155,19 @@ void loop() {
   }
   if (Serial.available()) {
 #ifdef SDLog
+
     int data;
     logger.close();
 
-    logger = SD.open(filename);
-    while ((data = logger.read()) >= 0) Serial.write(data);
-    logger.close();
+    if (Serial.read() == 'd') {
+      SD.remove(filename);
+    }
+    else {
 
-
-    if (Serial.read() == 'd') SD.remove(filename);
-
+      logger = SD.open(filename);
+      while ((data = logger.read()) >= 0) Serial.write(data);
+      logger.close();
+    }
     logger = openFile();
 #endif
   }
@@ -168,6 +175,10 @@ void loop() {
 
 
 }
+
+
+
+
 
 
 

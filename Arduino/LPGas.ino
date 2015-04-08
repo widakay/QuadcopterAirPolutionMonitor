@@ -1,4 +1,3 @@
-#define MQ6_POWER_ON_DIGITAL_OUT_PIN 2
 #define MQ6_LP_GAS_LEVEL_MEASURE_ANALOG_IN_PIN   1
 #define MQ6_HEATER_TIME_MILLIS 90000
 #define MQ6_SAMPLE_PERIOD_MILLIS 1000
@@ -16,7 +15,7 @@ MQ6_STATE mq6State = ST_MQ6_OFF;
 
 unsigned long mq6SwitchTimeMillis;
 unsigned long mq6NextReadingTimeMillis;
-unsigned long lpGasStartTimeMillis = 10000;   // start 10s after powerup
+unsigned long lpGasStartTimeMillis = 5000;   // start 5s after powerup
 
 
 void logLP() {
@@ -25,7 +24,7 @@ void logLP() {
   logger.print("#LP:");
   logger.print(millis());
   logger.print(",");
-  logger.print(digitalRead(MQ6_POWER_ON_DIGITAL_OUT_PIN));
+  logger.print(digitalRead(LPGasPin));
   logger.print(",");
   logger.print(lpGas);
   logger.println();
@@ -39,17 +38,17 @@ void logLP() {
 
 //-----------------------------------------------------
 // uses a simple finite state machine to manage states of the MQ6 sensor
-void readLPGas(){
+void updateLPGas(){
   switch(mq6State){
   case ST_MQ6_OFF :
     {
       if(millis() > lpGasStartTimeMillis){
-        digitalWrite(MQ6_POWER_ON_DIGITAL_OUT_PIN, HIGH);
+        digitalWrite(LPGasPin, HIGH);
 
         mq6State = ST_MQ6_CYCLE_0_HIGH;
         mq6SwitchTimeMillis = millis() + MQ6_HEATER_TIME_MILLIS;
 
-        Serial.print("H");
+        Serial.print("Heating");
 
       }
       break;
@@ -65,8 +64,8 @@ void readLPGas(){
       }
 
       if(millis() > mq6SwitchTimeMillis){
-        digitalWrite(MQ6_POWER_ON_DIGITAL_OUT_PIN, LOW);
-        Serial.print("C");
+        digitalWrite(LPGasPin, LOW);
+        Serial.print("Cooling");
         mq6State = ST_MQ6_DONE;
       }
 

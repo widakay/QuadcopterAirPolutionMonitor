@@ -3,13 +3,21 @@ void displayData() {
   display.clearDisplay();
 #ifdef BATTLEVEL
   float charge = fuelGauge.stateOfCharge();
+  soc[socCount++] = charge;
+  socCount %= 120;
   float voltage = fuelGauge.batteryVoltage();
+  
+  float socDiff = soc[socCount]-charge;
+  
+
+  float timeLeft = charge/(socDiff*30);
+
 
   display.print("Bat:");
   display.print(charge,0);
-  display.print("%");
-  display.print(" ");
+  display.print("% ");
   display.print(voltage,2);
+  //display.print(timeLeft,1);
   display.print("V");
   display.println();
 #endif

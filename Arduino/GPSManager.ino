@@ -1,4 +1,20 @@
 
+void loggerFloatPrint(float f) {
+  byte * b = (byte *) &f;
+  logger.print("f:");
+  for(int i=0; i<4; i++) {
+
+    byte b1 = (b[i] >> 4) & 0x0f;
+    byte b2 = (b[i] & 0x0f);
+
+    char c1 = (b1 < 10) ? ('0' + b1) : 'A' + b1 - 10;
+    char c2 = (b2 < 10) ? ('0' + b2) : 'A' + b2 - 10;
+
+    logger.print(c1);
+    logger.print(c2);
+  }
+}
+
 void manageGPS() {
 
   bool newData = false;
@@ -14,7 +30,7 @@ void manageGPS() {
     unsigned long age, date, time;
 
 
-    //gps.get_datetime(&date, &time, &age);
+    gps.get_datetime(&date, &time, &age);
 
     gps.f_get_position(&flat, &flon, &age);
     logger.print("#GPS:");
@@ -24,11 +40,11 @@ void manageGPS() {
     logger.print(",");
     logger.print(time);
     logger.print(",");
-    logger.print(flat == TinyGPS::GPS_INVALID_F_ANGLE ? 0.0 : flat, 6);
+    loggerFloatPrint(flat == TinyGPS::GPS_INVALID_F_ANGLE ? 0.0 : flat);
     logger.print(",");
-    logger.print(flon == TinyGPS::GPS_INVALID_F_ANGLE ? 0.0 : flon, 6);
+    loggerFloatPrint(flon == TinyGPS::GPS_INVALID_F_ANGLE ? 0.0 : flon);
     logger.print(",");
-    logger.print(gps.f_altitude());
+    loggerFloatPrint(gps.f_altitude());
     logger.print(",");
     logger.print(gps.satellites() == TinyGPS::GPS_INVALID_SATELLITES ? 0 : gps.satellites());
     logger.print(",");
