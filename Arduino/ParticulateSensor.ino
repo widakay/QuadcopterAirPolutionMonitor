@@ -1,13 +1,15 @@
 
-int sampleSensor100() {
+float sampleSensor100() {
 
-  analogReference(INTERNAL);
+  //analogReference(INTERNAL);
   long sum = 0;
   for (int i=0;i<25;i++) {
     sum += sampleSensor();
   }
-  analogReference(DEFAULT);
-  return sum/25;
+  //analogReference(DEFAULT);
+  sensorVal = sum/25.0;
+  sensorVal *= (3.3/1024);
+  return sensorVal;
 }
 
 int sampleSensor() {

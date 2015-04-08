@@ -6,6 +6,7 @@ void initSD() {
   // see if the card is present and can be initialized:
   if (!SD.begin(10)) {
     // don't do anything more:
+    Serial.println("failed to init SD...");
   }
 }
   
@@ -14,7 +15,7 @@ File openFile() {
 
   // if the file is available, write to it:
   if (dataFile) {
-    return dataFile;// dataFile;
+    return dataFile;
   }
 }
 

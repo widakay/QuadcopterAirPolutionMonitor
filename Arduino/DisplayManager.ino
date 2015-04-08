@@ -1,26 +1,19 @@
 #ifdef DISPLAYEN
 void displayData() {
   display.clearDisplay();
-  
-  #ifdef BATTLEVEL
+#ifdef BATTLEVEL
   float charge = fuelGauge.stateOfCharge();
-  display.println("Bat: ");
+  float voltage = fuelGauge.batteryVoltage();
+
+  display.print("Bat:");
   display.print(charge,0);
   display.print("%");
   display.print(" ");
-  
-
-  float voltage = fuelGauge.batteryVoltage();
-  display.print(voltage,4);
-  display.println("V");
-  #endif
-  
-  display.setTextSize(2);
-  display.println("Dust:");
-
-  display.setTextSize(1);
+  display.print(voltage,2);
+  display.print("V");
+  display.println();
+#endif
   display.print("raw: ");
-  float sensorVal = sampleSensor100()*(vRef/1024);
   display.print(sensorVal);
   display.println(" v");
 
@@ -28,7 +21,37 @@ void displayData() {
   display.print("ppm: ");
   display.print(ppm, 4);
   display.println();
+
+  float flat, flon;
+  int year;
+
+  byte month, day, hour, minute, second, hundredths;
+
+  unsigned long age;
+
+  gps.crack_datetime(&year, &month, &day, &hour, &minute, &second, &hundredths, &age);
+  gps.f_get_position(&flat, &flon, &age);
+
+
+  display.print(flat == TinyGPS::GPS_INVALID_F_ANGLE ? 0.0 : flat, 2);
+  display.print(",");
+  display.println(flon == TinyGPS::GPS_INVALID_F_ANGLE ? 0.0 : flon, 2);
+  
+  display.print(gps.satellites() == TinyGPS::GPS_INVALID_SATELLITES ? 0 : gps.satellites());
+  display.print(" ");
+
+  char sz[10];
+
+  sprintf(sz, "%02d:%02d:%02d", hour, minute, second);
+
+  display.println(sz);
+  display.print(millis());
+  
   display.display();
 
 }
 #endif
+
+
+
+

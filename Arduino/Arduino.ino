@@ -1,6 +1,8 @@
 
 #define BATTLEVEL
-//#define DISPLAYEN
+#define DISPLAYEN
+//#define SDLog
+
 #define INTERVAL 1000
 
 
@@ -13,14 +15,13 @@
 #include <TinyGPS.h>
 
 #include "Arduino.h"
-#include "Arduino.h"
 #ifdef BATTLEVEL
 #include "Wire.h"
 #include "MAX1704.h"
 #endif
 
 #ifdef DISPLAYEN
-Adafruit_PCD8544 display = Adafruit_PCD8544(5, 7, 6);
+Adafruit_PCD8544 display = Adafruit_PCD8544(6, 5, 9);
 #endif
 
 #ifdef BATTLEVEL
@@ -29,12 +30,15 @@ MAX1704 fuelGauge;
 TinyGPS gps;
 
 int dustPin=2;
-int dustVal=0;
+int ledPower=14;
 
-int ledPower=8;
 int delayTime=280;
 int delayTime2=40;
 float offTime=9680;
+float sensorVal = 0;
+
+
+
 unsigned long lastDebug;
 unsigned long startMillis;
 
@@ -42,15 +46,11 @@ char filename[] = "d.txt";
 
 float vRef = 1.1;
 
+#ifdef SDLog
 File logger;
-
-void initSD();
-File openFile();
-void manageGPS();
-void readLPGas();
-void logLP();
-int sampleSensor();
-int sampleSensor100();
+#else
+#define logger Serial
+#endif
 
 void setup(){
   Serial.begin(115200);
@@ -60,10 +60,15 @@ void setup(){
   display.begin();
   display.setContrast(60);
   display.clearDisplay();
+  display.print("Running!");
   display.display();
 #endif
 
+  delay(1000);
+  Serial.println("Running");
+
 #ifdef BATTLEVEL
+  Wire.begin();
   fuelGauge.reset();
   fuelGauge.quickStart();
   fuelGauge.setAlertThreshold(10);
@@ -71,44 +76,48 @@ void setup(){
 #endif
 
 
-  pinMode(4,OUTPUT);
-  pinMode(9,OUTPUT);
-  digitalWrite(4, LOW);
   pinMode(ledPower,OUTPUT);
-  analogReference(DEFAULT);
-  digitalWrite(9, LOW);
+  //pinMode(9,OUTPUT);
+  digitalWrite(ledPower, LOW);
+  //analogReference(DEFAULT);
+  //digitalWrite(9, LOW);
 
   startMillis = millis();
 
-
+#ifdef SDLog
   initSD();
   logger = openFile();
-
+#endif
 }
 
 
-void loop(){
+void loop() {
   manageGPS();
-  readLPGas();
+  //readLPGas();
 
   if (millis()-lastDebug > INTERVAL) {
+
+#ifdef DISPLAYEN
+    displayData();
+#endif
+
     lastDebug = millis();
-    int sensorVal = sampleSensor100();
-    float ppm = sensorVal*(2.56/1024)*0.172-0.0999;
+    float sensorVal = sampleSensor100();
+    float ppm = sensorVal*0.172-0.0999;
     logLP();
-    
-    
-    /*
-    Serial.print("log: ");
-    
-    Serial.print(sensorVal);
-    Serial.print("V");
-    //analogWrite(9, sensorVal/4);
+
 
     
-    
-    Serial.print(" ppm: ");
-    Serial.println(ppm, 4);*/
+    Serial.print("log: ");
+     
+     Serial.print(sensorVal);
+     Serial.print("V");
+     //analogWrite(9, sensorVal/4);
+     
+     
+     
+     Serial.print(" ppm: ");
+     Serial.println(ppm, 4);
 
 
     logger.print("#PPM:");
@@ -122,12 +131,12 @@ void loop(){
 #ifdef BATTLEVEL
     float charge = fuelGauge.stateOfCharge();
     float voltage = fuelGauge.batteryVoltage();
-/*
+    /*
     Serial.print(",batt:");
-    Serial.print(charge,2);
-    Serial.print("%,");
-    Serial.print(voltage,4);
-    Serial.println("V");*/
+     Serial.print(charge,2);
+     Serial.print("%,");
+     Serial.print(voltage,4);
+     Serial.println("V");*/
 
     logger.print("#BATT:");
     logger.print(millis());
@@ -141,6 +150,7 @@ void loop(){
 #endif
   }
   if (Serial.available()) {
+#ifdef SDLog
     int data;
     logger.close();
 
@@ -152,14 +162,18 @@ void loop(){
     if (Serial.read() == 'd') SD.remove(filename);
 
     logger = openFile();
+#endif
   }
 
 
-#ifdef DISPLAYEN
-  displayData();
-#endif
 
 }
+
+
+
+
+
+
 
 
 

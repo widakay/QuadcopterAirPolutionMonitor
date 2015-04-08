@@ -10,12 +10,11 @@ void manageGPS() {
       newData = true;
   }
   if (newData) {
-    digitalWrite(9, !digitalRead(9));
     float flat, flon;
     unsigned long age, date, time;
 
 
-    gps.get_datetime(&date, &time, &age);
+    //gps.get_datetime(&date, &time, &age);
 
     gps.f_get_position(&flat, &flon, &age);
     logger.print("#GPS:");
