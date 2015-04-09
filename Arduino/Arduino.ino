@@ -2,7 +2,7 @@
 #define BATTLEVEL
 #define DISPLAYEN
 #define BMP180
-//#define SDLog
+#define SDLog
 
 #define INTERVAL 1000
 
@@ -12,6 +12,7 @@
 #include <Adafruit_GFX.h>
 #include <Adafruit_PCD8544.h>
 #endif
+
 #include <SD.h>
 #include <TinyGPS.h>
 
@@ -83,6 +84,7 @@ void setup(){
   fuelGauge.quickStart();
   fuelGauge.setAlertThreshold(10);
   fuelGauge.showConfig();
+  Serial.println("battery initialized");
 #endif
 
 #ifdef BMP180

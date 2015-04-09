@@ -22,10 +22,10 @@ void displayData() {
   display.println();
 #endif
   display.print("raw: ");
-  display.print(sensorVal);
+  display.print(sensorVal*(3.3/1024));
   display.println(" v");
 
-  float ppm = sensorVal*0.172-0.0999;
+  float ppm = sensorVal*(3.3/1024)*0.172-0.0999;
   display.print("ppm: ");
   display.print(ppm, 4);
   display.println();
