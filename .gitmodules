@@ -1,0 +1,3 @@
+[submodule "QuadcopterDataParser"]
+	path = QuadcopterDataParser
+	url = git@github.com:widakay/QuadcopterDataParser.git
