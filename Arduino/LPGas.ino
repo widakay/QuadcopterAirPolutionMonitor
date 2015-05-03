@@ -28,7 +28,6 @@ void logLP() {
   logger.print(",");
   logger.print(lpGas);
   logger.println();
-  logger.flush();
 /*
   Serial.print(",LP:");
   Serial.print(lpGas);*/

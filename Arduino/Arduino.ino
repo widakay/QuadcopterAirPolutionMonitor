@@ -3,9 +3,9 @@
 #define DISPLAYEN
 #define BMP180
 #define SDLog
+#define DHTLOG
 
 #define INTERVAL 1000
-
 
 #include <SPI.h>
 #ifdef DISPLAYEN
@@ -37,20 +37,25 @@ MAX1704 fuelGauge;
 #endif
 TinyGPS gps;
 
-int dustPin=2; // analog input pin 2
-int ledPower=14;
+#ifdef DHTLOG
+#include "DHT.h"
+DHT dht(3, DHT22, 30);
+#endif
+
+int dustPin = 2; // analog input pin 2
+int ledPower = 14;
 int LPGasPin = 2; // digital io pin 2
 
-int delayTime=280;
-int delayTime2=40;
-float offTime=9680;
+int delayTime = 280;
+int delayTime2 = 40;
+float offTime = 9680;
 float sensorVal = 0;
 
 float soc[120];
 int socCount = 0;
 
 
-unsigned long lastDebug;
+unsigned long nextDebug;
 unsigned long startMillis;
 
 char filename[] = "d.txt";
@@ -63,9 +68,11 @@ File logger;
 #define logger Serial
 #endif
 
-void setup(){
+void setup() {
   Serial.begin(115200);
   Serial1.begin(9600);
+  Serial3.begin(115200);
+  pinMode(3, INPUT);
 
 #ifdef DISPLAYEN
   display.begin();
@@ -92,9 +99,13 @@ void setup(){
   Serial.println(barometer.testConnection() ? "BMP085 connection successful" : "BMP085 connection failed");
 #endif
 
+#ifdef DHTLOG
+  setupDHT22();
+#endif
 
-  pinMode(ledPower,OUTPUT);
-  pinMode(LPGasPin,OUTPUT);
+
+  pinMode(ledPower, OUTPUT);
+  pinMode(LPGasPin, OUTPUT);
   digitalWrite(ledPower, LOW);
   //analogReference(DEFAULT);
   digitalWrite(LPGasPin, LOW);
@@ -112,17 +123,20 @@ void loop() {
   manageGPS();
   updateLPGas();
 
-  if (millis()-lastDebug > INTERVAL) {
+  if (millis() > nextDebug) {
+    nextDebug = nextDebug + INTERVAL;
 
 #ifdef DISPLAYEN
     displayData();
 #endif
-    lastDebug = millis();
-    #ifdef BMP180
+#ifdef BMP180
     logPressure();
-    #endif
+#endif
+#ifdef DHTLOG
+    logDHT22();
+#endif
     float sensorVal = sampleSensor100();
-    float ppm = sensorVal*(3.3/1024)*0.172-0.0999;
+    float ppm = sensorVal * (3.3 / 1024) * 0.172 - 0.0999;
     logLP();
 
 
@@ -147,16 +161,18 @@ void loop() {
     logger.print("#BATT:");
     logger.print(millis());
     logger.print(",");
-    logger.print(charge,2);
+    logger.print(charge, 2);
     logger.print("");
     logger.print(",");
-    logger.print(voltage,4);
+    logger.print(voltage, 4);
     logger.println();
-    logger.flush();
 #endif
   }
-  if (Serial.available()) {
+
+    logger.flush();
 #ifdef SDLog
+  if (Serial.available()) {
+
 
     int data;
     logger.close();
@@ -171,24 +187,16 @@ void loop() {
       logger.close();
     }
     logger = openFile();
+  }/*
+  if (digitalRead(3)) {
+    char data;
+    logger.close();
+    logger = SD.open(filename);
+    while ((data = logger.read()) >= 0) Serial3.write(data);
+    logger.close();
+
+    logger = openFile();
+  }*/
 #endif
-  }
-
-
-
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 

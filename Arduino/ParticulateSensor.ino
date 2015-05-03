@@ -1,38 +1,27 @@
+//#define displayParticulates
 
 float sampleSensor100() {
 
   //analogReference(INTERNAL);
   int vals[25];
+
+  long sum = 0;
   for (int i=0;i<25;i++) {
     vals[i] = sampleSensor();
+    sum += vals[i] ;
   }
-  
+
+#ifdef displayParticulates
   //display.clearDisplay();
   for (int i=0;i<25;i++) {
     int height = 48-min(47, max(1, vals[i]/10));
     display.drawPixel(i*2, height, BLACK);
     display.drawPixel(i*2+1, height, BLACK);
   }
-  long sum = 0;
-  for (int i=0;i<25;i++) {
-    sum += vals[i] ;
-  }
-  //analogReference(DEFAULT);
-  sensorVal = sum/25.0;
   display.display();
-  return sensorVal;
-}
-
-float sampleSensor100noDisplay() {
-
-  //analogReference(INTERNAL);
-  long sum = 0;
-  for (int i=0;i<25;i++) {
-    sum += sampleSensor();
-  }
+#endif
   //analogReference(DEFAULT);
   sensorVal = sum/25.0;
-  sensorVal *= (3.3/1024);
   return sensorVal;
 }
 
@@ -45,6 +34,7 @@ int sampleSensor() {
   delayMicroseconds(offTime);
   return dustVal;
 }
+
 
 
 

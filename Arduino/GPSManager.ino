@@ -18,8 +18,7 @@ void loggerFloatPrint(float f) {
 void manageGPS() {
 
   bool newData = false;
-  while (Serial1.available())
-  {
+  while (Serial1.available()) {
     char c = Serial1.read();
     //Serial.write(c); // uncomment this line if you want to see the GPS data flowing
     if (gps.encode(c)) // Did a new valid sentence come in?
@@ -50,7 +49,6 @@ void manageGPS() {
     logger.print(",");
     logger.print(gps.hdop() == TinyGPS::GPS_INVALID_HDOP ? 0 : gps.hdop());
     logger.println();
-    logger.flush();
   }
   /*
   
